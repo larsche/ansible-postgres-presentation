@@ -26,14 +26,14 @@
     filename: postgresql
     state: present
 
-- name: installing postgres
+- name: setup-debian | installing postgres
   apt:
     name: 
       - postgresql-{{ postgres_version }}
       - postgresql-server-dev-{{ postgres_version }}
     state: present
 
-- name: 
+- name: setup-debian | installed psycopg2 if requested
   apt:
     name:
       - "{{ postgresql_python_library }}"

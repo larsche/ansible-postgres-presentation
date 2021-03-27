@@ -1,0 +1,8 @@
+---
+__postgresql_version: "11"
+__postgresql_ctlcluster: "main"
+__postgresql_data_dir: "/var/lib/postgresql/{{ postgres_version }}/{{ postgresql_ctlcluster }}"
+__postgresql_bin_path: "/usr/lib/postgresql/{{ postgres_version }}/bin"
+__postgresql_config_path: "/etc/postgresql/{{ postgres_version }}/main"
+__postgresql_daemon: postgresql
+

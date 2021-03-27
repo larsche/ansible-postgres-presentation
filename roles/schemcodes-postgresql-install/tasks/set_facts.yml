@@ -1,65 +1,16 @@
 ---
-# - name: TEMP| set facts| checking for stuff
-#   include_tasks: temp_set_facts.yml
-
 - name: set fact | Check if PostgreSQL database is in recovery.
   become: true 
   stat:
     path: "{{ postgresql_data_dir }}/recovery.conf"
   register: pgrecovery_check
 
-# - debug: var=pgrecovery_check
-
-# - name: Gather the rpm package facts ## this takes a long time to do!
-#   package_facts:
-#     manager: auto
-
-
-# - name: when master_prefix is not defined
-#   set_fact:
-#     master_prefix: "01"
-#   when: master_prefix is undefined
-
-# - name: when master_prefix is not defined
-#   set_fact:
-#     slave_prefix: "02"
-#   when: slave_prefix is not defined
-
 - set_fact:
     postgresql_binary: "postgresql-{{ postgres_version }}"
-
-# - debug:
-#     var: postgresql_binary
 
 - name: Check if PostgreSQL database is initialized.
   become: true
   stat:
     path: "{{ postgresql_data_dir }}/PG_VERSION"
   register: pgdata_dir_version
-
-
-# - set_fact:
-#      is_not_installed: false|default(true)
-#   when: '"postgresql-{{ postgres_version }}" not in ansible_facts.packages'
-
-# - set_fact: 
-#     is_master: true
-#   when: ( "{{ master_prefix }}" in inventory_hostname and not pgdata_dir_version.stat.exists and "{{ postgresql_binary }}" not in ansible_facts.packages) 
-#      or (pgdata_dir_version.stat.exists and not pgrecovery_check.stat.exists) or (is_master and not is_slave)
-
-# - debug:
-#     msg: "is_master: {{ is_master }}"
-#   when: is_master is defined
-  
-# - set_fact: 
-#     is_slave: true 
-#   when: (slave_prefix in inventory_hostname and not pgdata_dir_version.stat.exists) or pgrecovery_check.stat.exists
-#    or (not is_master and is_slave) 
-
-# - debug:
-#     msg: "is_slave: {{ is_slave }}"
-#   when: is_slave is defined
-
-
-
   

@@ -4,10 +4,6 @@
 
 - include_tasks: set_facts.yml
 
-# Setup/install tasks.
-# - include_tasks: setup-RedHat.yml
-#   when: ansible_os_family == 'RedHat'
-
 - include_tasks: setup-Debian.yml
   when: ansible_os_family == 'Debian'
 
@@ -20,13 +16,20 @@
 
 - name: Ensure PostgreSQL is started and enabled on boot.
   service:
-    name: "{{ postgresql_daemon }}-{{postgres_version}}"
+    name: "{{ postgresql_daemon }}"
     state: "{{ postgresql_service_state }}"
     enabled: "{{ postgresql_service_enabled }}"
 
 
 - import_tasks: set_users.yml
   tags: user
+
+
+- name: removing the "{{ postgresql_python_library }}"
+  apt:
+    name: "{{ postgresql_python_library }}"
+    state: absent
+
 
 # - import_tasks: create_standby_folder.yml
 #   tags: standby

@@ -31,6 +31,7 @@ postgresql_global_config_options:
     value: '6'
   - option: wal_keep_segments
     value: '150'
+    state: 'absent'
   - option: max_replication_slots
     value: '5'
   - option: hot_standby
@@ -39,6 +40,8 @@ postgresql_global_config_options:
     value: 'on'
   - option: archive_command
     value: "test ! -f /var/lib/postgresql/{{ postgres_version }}/archive/%f && cp %p /var/lib/postgresql/{{ postgres_version }}/archive/%f"
+
+
 
 postgres_version: '11' 
 
@@ -65,10 +68,7 @@ postgresql_users:
     password: "{{ replicant_pwd }}" 
     role_attr_flags: replication
     state: present
-  - name: local_dba
-    password: 12345
-    role_attr_flags: SUPERUSER
-    state: present
+
 
 
 recovery_uncompressed: '/usr/bin/rsync -z -e "ssh -l database -i /var/keys/id_database_rsa" -a database@loc-backup:archive/${PRIMARY_FOLDER}-main/%f %p||exit 1'

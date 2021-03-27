@@ -2,6 +2,6 @@
 - hosts: localhost
   connection: lxd
   vars:
-          - group_hosts: "{{ groups['all'] }}"
+          - group_hosts: "{{ groups['dbserver'] }}"
   roles:
           - schemcodes-lxd

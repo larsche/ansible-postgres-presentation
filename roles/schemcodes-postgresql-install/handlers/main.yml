@@ -1,5 +1,5 @@
 ---
-- name: restart postgresql
+- name: restart postgresql 
   service:
     name: "{{ postgresql_daemon }}"
     state: restarted
@@ -12,3 +12,8 @@
     name: "{{ postgresql_daemon }}"
     state: reloaded
     sleep: 5
+
+
+- name: start postgresql
+  shell: "pg_ctlcluster {{ postgres_version }} {{ postgresql_ctlcluster }} restart"
+

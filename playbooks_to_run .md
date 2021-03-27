@@ -11,3 +11,8 @@
 ```
 ansible-playbook -i inventory/lxd_invetory.ini create-lxd.yml
 ```
+
+### create Postgres instance
+
+
+ansible-playbook -i inventory/lxd_invetory.ini create-cluster.yml  --vault-password-file ~/.vault_pass.txt

@@ -12,6 +12,7 @@
     - "/var/lib/postgresql/tools_{{ postgres_version }}/log"
     - "/var/lib/postgresql/tools_{{ postgres_version }}/sql"
     - "/var/lib/postgresql/tools_{{ postgres_version }}/script"
+    - "/var/lib/postgresql/{{ postgres_version }}/archive"
     
     #- {{  }}
 
@@ -24,8 +25,9 @@
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
   with_items: "{{ postgresql_global_config_options }}"
+  register: changes_to_conf
   notify: restart postgresql  
-  when: restart_service_on_change or not pgdata_dir_version.stat.exists
+  #when: restart_service_on_change or not pgdata_dir_version.stat.exists
 
 
 - name: Configuration | Configure host based authentication (if entries are configured).

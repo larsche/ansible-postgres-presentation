@@ -1,0 +1,9 @@
+---
+#
+
+- name: Slave | create slave
+  become: true
+  become_user: postgres
+  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P  -R -X s -D /var/lib/postgresql/{{ postgres_version }}/main 2>&1 "
+  when: move_old_folder.changed 
+  register: create_slave
