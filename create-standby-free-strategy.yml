@@ -1,0 +1,7 @@
+---
+- hosts: dbserver
+  become: true
+  gather_facts: true
+  strategy: free
+  roles:
+    - schemcodes-postgres-standby

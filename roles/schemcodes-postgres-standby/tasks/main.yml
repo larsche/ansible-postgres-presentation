@@ -1,9 +1,77 @@
 ---
 #
+- include_tasks: variables.yml
 
-- name: Slave | create slave
-  become: true
+#- include_tasks: setup_standby
+
+- fail:
+    msg: This is a potential primary
+  when: "'1-' in inventory_hostname"
+
+- name: Standby | Stop any postgres running
+  command: "pg_ctlcluster {{postgres_version}} {{postgresql_ctlcluster}} stop"
+  ignore_errors: yes
+
+
+- name: Standby | remove the any old folder
+  file:
+    path: "{{ postgresql_data_dir }}/"
+    state: 'absent'
+    
+
+
+- name: Standby | create slave non async disabled
   become_user: postgres
-  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P  -R -X s -D /var/lib/postgresql/{{ postgres_version }}/main 2>&1 "
-  when: move_old_folder.changed 
-  register: create_slave
+  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
+  register: create_standby
+  when: not async_enabled
+
+
+- name: Standby | create slave async enabled
+  become_user: postgres
+  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
+  async: 6000
+  poll: 0
+  register: create_standby
+  when: async_enabled
+
+- name: Standby | check async status async enabled
+  become_user: postgres
+  async_status:
+    jid: "{{ create_standby.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 100
+  delay: 10
+  when: async_enabled
+
+
+- name: Standby | handling the settings
+  become_user: postgres
+  lineinfile:
+    dest: "{{ postgresql_config_path }}/postgresql.conf"
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+  with_items: "{{ postgresql_global_replication_options }}"
+  register: changes_to_conf
+
+
+- name: Standby | creating the signal file
+  become_user: postgres
+  file:
+    state: touch
+    path: "{{postgresql_data_dir}}/standby.signal"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+
+
+- name: Standby | Stop any postgres running
+  command: "pg_ctlcluster {{postgres_version}} {{postgresql_ctlcluster}} start"
+  ignore_errors: yes
+
+
+  
+

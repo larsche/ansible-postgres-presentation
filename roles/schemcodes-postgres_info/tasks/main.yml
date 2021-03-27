@@ -5,9 +5,7 @@
       postgresql_info:
               db: postgres
               filter:
-               - in_recovery 
-               - version
-               - settings 
+              - "!settings" 
       register: pg_ping
   rescue:
     - name: Installing psycopg2 since it does not exists
@@ -16,11 +14,26 @@
           - python3-psycopg2
         state: present
 
-   - name: checking if postgres is available
+    - name: checking if postgres is available
       become_user: postgres 
       postgresql_info:
               db: postgres
               filter:
-               - in_recovery 
-               - version
+              - "!settings" 
       register: pg_ping
+
+
+- name: postgres_info | is postgres in recovery
+  become_user: postgres 
+  command: psql -Aqt -c "select pg_is_in_recovery()"
+  register: recovery
+
+- name: postgres_info| setting postgres facts
+  set_fact:
+    Isrecovery: "{{ recovery.stdout }}"
+    postgres_version: "{{ pg_ping.version.major }}"
+  
+
+    
+  
+  

@@ -37,28 +37,15 @@ postgresql_global_config_options:
   - option: archive_command
     value: "test ! -f /var/lib/postgresql/{{ postgres_version }}/archive/%f && cp %p /var/lib/postgresql/{{ postgres_version }}/archive/%f"
 
-
+primary: "{{ inventory_hostname.replace('2-','1-') }}"
 
 postgresql_global_replication_options:
   - option: primary_conninfo
-    value: 'host={{ inventory_hostname.replace('2-','1-') }} port=5432 user={{ replicant_user }} password={{ replicant_pwd }}'
+    value: "host={{ inventory_hostname.replace('2-','1-') }} port=5432 user={{ replicant_user }} password={{ replicant_pwd }}"
   - option: promote_trigger_file 
     value: '{{ postgres_home_dir }}/{{ postgres_version }}/main/failover'
   - option: restore_command
     value: ''
-  - option: max_wal_senders
-    value: '6'
-  - option: wal_keep_segments
-    value: '150'
-    state: 'absent'
-  - option: wal_keep_size
-    # this replaces wal keep segments and is calculated wal_keep_segments* wal_segments_size 
-    value: '2GB'
-  - option: max_replication_slots
-    value: '5'
-  - option: hot_standby
-    value: 'on'
-  - option: archive_mode
-    value: 'on'
-  - option: archive_command
-    value: "test ! -f /var/lib/postgresql/{{ postgres_version }}/archive/%f && cp %p /var/lib/postgresql/{{ postgres_version }}/archive/%f"
+
+
+async_enabled: false
