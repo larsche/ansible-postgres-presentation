@@ -1,0 +1,3 @@
+---
+# defaults file for lxd
+os_alias: ubuntu/bionic/amd64

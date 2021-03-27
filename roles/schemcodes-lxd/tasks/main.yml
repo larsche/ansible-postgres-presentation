@@ -1,0 +1,42 @@
+---
+- name: Load in local SSH key path
+  set_fact:
+    my_ssh_key: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
+
+- name: create containers
+  # get all host names from inventory
+  #  loop: "{{ groups['mysql_servers'] }}"
+  # use lxd_container module from ansible to create containera
+  lxd_container:
+    # container name is the hostname
+    name: "{{ item }}"
+    state: started
+    source:
+      type: image
+      mode: pull
+      server: https://images.linuxcontainers.org
+      alias: "{{ hostvars[item].os_alias  | default('ubuntu/focal/amd64') }}" 
+    devices:
+      # configure network interface
+      eth0:
+        type: nic
+        nictype: bridged
+        parent: lxdbr0
+        # get ip address from inventory
+        ipv4.address: "{{ hostvars[item].ip_address }}"
+        #    container_command: |
+        #      if [ ! -d ~/.ssh ]; then
+        #        systemctl install openssh-server
+        #        mkdir ~/.ssh
+        #        echo "{{ lookup('file', my_ssh_key) }}" | tee -a ~/.ssh/authorized_keys
+        #      fi
+    wait_for_ipv4_addresses: true
+    timeout: 600
+    profiles: ["default"]
+  with_items:
+    - "{{ group_hosts }}"
+
+- name: including tasks to build server
+  include_tasks: init_install.yml
+  with_items:
+    - "{{ group_hosts }}"

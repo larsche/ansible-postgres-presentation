@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+# PostgreSQL Client Authentication Configuration File
+# ===================================================
+#
+
+{% for pg_set in ppostgresql_global_config_options %}
+{{ pt_set.option }} = {{ pg_set.value }} }}
+{% endfor %}

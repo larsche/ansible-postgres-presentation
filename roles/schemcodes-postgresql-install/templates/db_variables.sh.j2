@@ -1,0 +1,16 @@
+postgresql_base="/var/lib/postgresql/"
+postgresql_data_dir="${postgresql_base}{{ postgres_version }}/main"
+# postgresql_data_dir='${postgresql_base}/<% postgresql_version >/main'
+original_recovery_file="${postgresql_data_dir}/recovery.conf"
+
+
+script_dir=$(dirname $0)
+rec_file_backup="${script_dir}/recovery_backup"
+primary_hostfile="${script_dir}/primary_hostname"
+recovery_file_template="${script_dir}/recovery.conf_template"
+alert_restart="${script_dir}/recovery_changed.trg"
+log_file="${script_dir}/standby_script.log"
+
+disk_percent=30
+timer_to_cancel=10
+

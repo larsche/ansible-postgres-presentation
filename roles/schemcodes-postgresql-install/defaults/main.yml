@@ -1,0 +1,112 @@
+---
+# RHEL/CentOS only. Set a repository to use for PostgreSQL installation.
+postgresql_enablerepo: ""
+
+# Set postgresql state when configuration changes are made. Recommended values:
+# `restarted` or `reloaded`
+restart_service_on_change: false
+
+postgresql_restarted_state: true 
+
+installpsycopg2: true
+postgresql_python_library: python3-psycopg2
+postgresql_user: postgres
+postgresql_group: postgres
+
+postgresql_unix_socket_directories:
+  - /var/run/postgresql
+
+postgresql_service_state: started
+postgresql_service_enabled: false
+
+# Global configuration options that will be set in postgresql.conf.
+postgresql_global_config_options:
+  - option: unix_socket_directories
+    value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: listen_addresses 
+    value: '*'
+  - option: wal_level
+    value: 'hot_standby'
+  - option: max_wal_senders
+    value: '6'
+  - option: wal_keep_segments
+    value: '150'
+  - option: max_replication_slots
+    value: '5'
+  - option: hot_standby
+    value: 'on'
+  - option: archive_mode
+    value: 'on'
+  - option: archive_command
+    value: "test ! -f /var/lib/postgresql/{{ postgres_version }}/archive/%f && cp %p /var/lib/postgresql/{{ postgres_version }}/archive/%f"
+
+postgres_version: '11' 
+
+
+# Host based authentication (hba) entries to be added to the pg_hba.conf. This
+# variable's defaults reflect the defaults that come with a fresh installation.
+postgresql_hba_entries:
+  - {type: local, database: all, user: postgres, auth_method: peer}
+  - {type: local, database: all, user: all, auth_method: peer}
+  - {type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5}
+  - {type: host, database: all, user: all, address: '::1/128', auth_method: md5}
+  - {type: host, database: replication, user: "{{ replicant_user }}", address: '192.168.200.0/24', auth_method: md5}
+  - {type: host, database: all, user: all, address: '192.168.200.0/24', auth_method: md5}
+
+# Debian only. Used to generate the locales used by PostgreSQL databases.
+postgresql_locales:
+  - 'en_US.UTF-8'
+
+set_user: true
+replicant_user: replicant
+
+postgresql_users:
+  - name: "{{ replicant_user }}"
+    password: "{{ replicant_pwd }}" 
+    role_attr_flags: replication
+    state: present
+  - name: local_dba
+    password: 12345
+    role_attr_flags: SUPERUSER
+    state: present
+
+
+recovery_uncompressed: '/usr/bin/rsync -z -e "ssh -l database -i /var/keys/id_database_rsa" -a database@loc-backup:archive/${PRIMARY_FOLDER}-main/%f %p||exit 1'
+recovery_compressed: '/usr/bin/rsync -z -e "ssh -l database -i /var/keys/id_database_rsa" -a database@loc-backup:archive/${PRIMARY_HOST}-main/%f %p||exit 1'
+wal_compression: -1 
+template_list:
+  - create_stand_by.sh
+  - db_variables.sh
+  - recovery.conf_template
+
+recovery_location: ""
+
+# Databases to ensure exist.
+postgresql_databases: []
+# - name: exampledb # required; the rest are optional
+#   lc_collate: # defaults to 'en_US.UTF-8'
+#   lc_ctype: # defaults to 'en_US.UTF-8'
+#   encoding: # defaults to 'UTF-8'
+#   template: # defaults to 'template0'
+#   login_host: # defaults to 'localhost'
+#   login_password: # defaults to not set
+#   login_user: # defaults to '{{ postgresql_user }}'
+#   login_unix_socket: # defaults to 1st of postgresql_unix_socket_directories
+#   port: # defaults to not set
+#   owner: # defaults to postgresql_user
+#   state: # defaults to 'present'
+
+# Users to ensure exist.
+#postgresql_users: []
+# - name: jdoe #required; the rest are optional
+#   password: # defaults to not set
+#   encrypted: # defaults to not set
+#   priv: # defaults to not set
+#   role_attr_flags: # defaults to not set
+#   db: # defaults to not set
+#   login_host: # defaults to 'localhost'
+#   login_password: # defaults to not set
+#   login_user: # defaults to '{{ postgresql_user }}'
+#   login_unix_socket: # defaults to 1st of postgresql_unix_socket_directories
+#   port: # defaults to not set
+#   state: # defaults to 'present'

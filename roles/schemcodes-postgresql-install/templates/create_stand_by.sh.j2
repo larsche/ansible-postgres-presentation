@@ -1,0 +1,208 @@
+### this script will create the stand by
+# 1) Checks if postgres is running?
+#a) is it running as a slave ?
+#b) are there connections that are client backend?
+#c) Is the datafile takeing alot ?
+# check if the
+# 2) prompt what is  to happen and also if its correct
+
+
+# trap SIGINT
+logToFile=false
+while getopts "l" arg; do
+case $arg in
+l)
+logToFile=true
+;;
+esac
+done
+
+
+source $(dirname $0)/include_function.sh
+source $(dirname $0)/db_variables.sh
+
+if $logToFile; then
+touch ${log_file};
+echo > ${log_file}
+fi
+
+# banner "creating standby"
+
+if [ "$USER" != "root" ]; then
+log_info "User must be root!" "ERROR"
+exit 2
+
+fi
+
+
+
+
+if ! test -f ${primary_hostfile}; then
+missingPrimaryHostfileMessage
+exit 3
+elif  test -f ${primary_hostfile}; then
+log_info "Primary_hostfile found!"
+
+fi
+
+
+if [ -d "${postgresql_data_dir}.old" ]; then
+log_info "The folder ${postgresql_data_dir}.old exsits! Remove it" "ERROR"
+exit 4
+fi
+
+
+####################################################
+
+log_info "Getting some info about the database"
+
+
+data_disk_size=$(df --output=pcent /var/lib/postgresql | tail -1 | tr -d ' ' | cut -d'%' -f'1')
+postgres_running=$(ispostgresrunning)
+active_connection=0
+if [ "${postgres_running}" == "1" ]; then
+active_connection=$(_psql "select count(*) from pg_stat_activity where backend_type='client backend' and pid != pg_backend_pid();")
+database_instances=$(_psql "select datname from pg_database where datallowconn and not datistemplate and datname != 'postgres' ")
+fi
+
+
+#####################################################
+log_info "Some data to check!"
+
+
+log_info "${logging} - disk space ${postgresql_data_dir}: \033[30;43;01;04m ${data_disk_size}% used \033[0m "
+[ "${data_disk_size}" -gt "${disk_percent}" ] && log_info "- The database will not fit, \033[37;41;5;1mDeleting the folder\033[0m"   || log_info "- \033[30;43;5;1mMoving the folder! \033[0m"
+log_info "Primary hostname: \033[30;43;01;04m $(cat ${primary_hostfile} |head -1 ) \033[0m"
+# echo -e "- Archive Folder: \033[30;43;01;04m $(cat ${primary_hostfile} | sed -n '2p' ) \033[0m"
+# echo ------------------------------------------
+log_info "- postgresql running:  $( [ "${postgres_running}" == "1" ] && echo -e "\033[30;43;01;04m running \033[0m" || echo -e "\033[30;43;01;04m Not Running\033[0m" )"
+# echo ------------------------------------------
+# echo -e "- Number of active connection:  \033[30;43;01;04m ${active_connection}\033[0m connections"
+# echo ------------------------------------------
+# echo -n - Databases instances:
+# [ -z "$database_instances" ] && echo " None Installed" || echo - ${database_instances}
+# echo ------------------------------------------
+# # $(_psql )
+
+# echo
+# echo DB info given, press CTR+c to cancel, or wait ${timer_to_cancel} seconds
+# echo
+# echo check
+# echo -e $logging
+
+# for i in $(seq 1 $timer_to_cancel)
+# do
+#     echo -n ==
+#     sleep 1
+# done
+# echo
+
+sleep $timer_to_cancel
+
+#################################
+#### starting the procedure
+#################################
+
+log_info "OK! Lets starting !"
+
+if [ "${postgres_running}" == "1" ]; then
+log_info "Stopping postgres"
+pg_ctlcluster 11 main stop
+
+if [ $? -ne 0 ];then
+log_info "Error occured Shutting down postgres (exit code 3)" "ERROR"
+exit 5;
+fi
+else
+log_info "postgres is already shutdown"
+fi
+
+
+if [ "${data_disk_size}" -gt "${disk_percent}" ] ; then
+log_info "Deleting ${postgresql_data_dir} folder"
+su - postgres -c "rm -rf  ${postgresql_data_dir}"
+else
+if [ ! -d "${postgresql_data_dir}.old" ]; then
+su - postgres -c "mv ${postgresql_data_dir}/ ${postgresql_data_dir}.old/ "
+
+else
+log_info "${postgresql_data_dir}.old/ already exists (exit code 4)" "ERROR"
+log_info "Remember the database is shut down right now!"
+log_info "remove it!"
+exit 6;
+fi
+
+fi
+
+
+
+# Getting the repliation password
+log_info "Getting the relication password"
+
+pws=$(extract_pw ${recovery_file_template})
+
+
+su - postgres -c "export PGPASSWORD=${pws} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h $(cat ${primary_hostfile} | head -1) -U {{ replicant_user }}  -P  -R -X s -D /var/lib/postgresql/{{ postgres_version }}/main"
+
+if [ $? -ne 0 ];then
+log_info "An error occured while creating the relica (exit code 5)" "ERROR"
+
+exit 7;
+fi
+
+echo
+log_info "The Standby was created."
+
+log_info "Creating the recovery.conf"
+
+${script_dir}/create_recovery_file.sh
+
+
+log_info "Starting the database"
+pg_ctlcluster 11 main start
+
+if [ $? -ne 0 ]; then
+log_info "An error occured while start up (exit code 6)" "ERROR"
+exit 8
+fi
+
+started_up="false"
+count_failer=0
+
+while [ "${started_up}" == "false" ]
+do
+has_started=$(_psql "select 1")
+if [ "${has_started}" == "1" ]; then
+started_up="true"
+echo started
+else
+log_info "DB not started yet will wait for 15 sec"
+sleep 15
+count_failer=$(( $count_failer + 1 ))
+echo $count_failer
+fi
+
+if [ "${count_failer}" == "40" ]; then
+log_info "Something when wrong while starting the DB! CHECK LOGS" "ERROR"
+exit 9
+fi
+
+done
+
+
+
+######################################
+##### is it streaming or recovering ?
+######################################
+
+echo The database has started, checking that everything is correct
+
+echo
+if [ "$(isstandby)" == "t" ]; then
+echo Replication has started
+else
+log_info "NOT REPLICATING " "ERROR"
+exit 10;
+fi
+
+

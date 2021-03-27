@@ -1,0 +1,24 @@
+---
+- hosts: localhost #elocalhost
+  connection: local
+  vars: 
+    ssh_known_hosts:  "{{ groups['all'] }}"
+  tasks:
+          - name: destroying lxc containers
+            lxd_container:
+                    name: "{{ item }}" 
+                    state: absent
+            with_items: "{{ ssh_known_hosts }}" 
+                    
+- hosts: localhost
+  connection: lxd
+  vars:
+          - group_hosts: "{{ groups['all'] }}"
+  roles:
+          - lxd
+
+
+- import_playbook: add-ssh-key.yml
+
+
+- import_playbook: create_postgres_ha_cluster.yml

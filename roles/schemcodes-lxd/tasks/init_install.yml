@@ -1,0 +1,46 @@
+---
+- set_fact: outer_loop="{{item}}"
+# - debug: 
+#     msg: "testing {{outer_loop}}"
+
+
+- name: install ssh
+  delegate_to: "{{outer_loop}}"
+  package:
+    name: openssh-server
+    state: present
+
+- name:  enable ssh
+  delegate_to: "{{outer_loop}}"
+  service:
+    name: ssh
+    state: started
+
+
+- name: Make sure we have a 'wheel' group
+  delegate_to: "{{outer_loop}}"
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  delegate_to: "{{outer_loop}}"
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Add sudoers users to wheel group
+  delegate_to: "{{outer_loop}}"
+  become: yes
+  user: name=larsch groups=wheel append=yes state=present createhome=yes shell="/bin/bash" password="$1$SomeSalt$qUM23fah0g9C3llozKOgT/"
+
+- name: Set up authorized keys for the deployer user
+  delegate_to: "{{outer_loop}}"
+  become: yes
+  authorized_key: user=larsch key="{{item}}"
+  with_file:
+    - /home/larsch/.ssh/id_rsa.pub

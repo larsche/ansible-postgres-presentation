@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  connection: lxd
+  vars:
+          - group_hosts: "{{ groups['all'] }}"
+  roles:
+          - schemcodes-lxd

@@ -1,0 +1,55 @@
+---
+- name: Configuration | creating the config path
+  file:
+    path: "{{ item }}"
+    state: directory 
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+  with_items:
+    - "{{ postgresql_config_path }}"
+    - "{{ postgresql_config_path }}/conf.d"
+    - "/var/lib/postgresql/tools_{{ postgres_version }}"
+    - "/var/lib/postgresql/tools_{{ postgres_version }}/log"
+    - "/var/lib/postgresql/tools_{{ postgres_version }}/sql"
+    - "/var/lib/postgresql/tools_{{ postgres_version }}/script"
+    
+    #- {{  }}
+
+- name: Configuration | Configure global settings.
+  lineinfile:
+    dest: "{{ postgresql_config_path }}/postgresql.conf"
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+  with_items: "{{ postgresql_global_config_options }}"
+  notify: restart postgresql  
+  when: restart_service_on_change or not pgdata_dir_version.stat.exists
+
+
+- name: Configuration | Configure host based authentication (if entries are configured).
+  template:
+    src: "pg_hba.conf.j2"
+    dest: "{{ postgresql_config_path }}/pg_hba.conf"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+  notify: reload postgresql
+  when: postgresql_hba_entries | length > 0
+
+
+- name: Configuration | Ensure PostgreSQL unix socket dirs exist.
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 02775
+  with_items: "{{ postgresql_unix_socket_directories }}"
+
+- name: flush hanlers
+  meta: flush_handlers
+
+
+  

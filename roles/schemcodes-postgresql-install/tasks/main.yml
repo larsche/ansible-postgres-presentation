@@ -1,0 +1,39 @@
+---
+# Variable configuration.
+- include_tasks: variables.yml
+
+- include_tasks: set_facts.yml
+
+# Setup/install tasks.
+# - include_tasks: setup-RedHat.yml
+#   when: ansible_os_family == 'RedHat'
+
+- include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- include_tasks: initialize.yml
+  when: not pgdata_dir_version.stat.exists
+
+- include_tasks: configure.yml
+  tags:
+  - recovery_file
+
+- name: Ensure PostgreSQL is started and enabled on boot.
+  service:
+    name: "{{ postgresql_daemon }}-{{postgres_version}}"
+    state: "{{ postgresql_service_state }}"
+    enabled: "{{ postgresql_service_enabled }}"
+
+
+- import_tasks: set_users.yml
+  tags: user
+
+# - import_tasks: create_standby_folder.yml
+#   tags: standby
+
+  #- import_tasks: databases.yml
+
+## create the slave! Not forced
+# - import_tasks: slave.yml
+#   when: is_slave
+  #  tags: [ 'never', 'slave' ]

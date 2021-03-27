@@ -1,0 +1,47 @@
+- name: For each host, scan for its ssh public key
+  shell: "ssh-keyscan {{ item }},`dig +short {{ item }}`"
+  with_items: "{{ ssh_known_hosts }}"
+  register: ssh_known_hostname_results
+  ignore_errors: yes
+  tags:
+    - ssh
+
+- name: Nslookup for each host 
+  shell: "nslookup {{ item }} | grep 'Address' | awk 'NR==2 {print $2}' "
+  with_items: "{{ ssh_known_hosts }}"
+  register: ssh_known_ip_results
+  ignore_errors: yes
+  tags:
+    - ssh
+
+- debug:
+    msg: "{{ item.stdout }}"
+  with_items:
+    - "{{ ssh_known_ip_results.results }}"
+
+- name: Removing the public key for  in the '{{ ssh_known_hosts_file }}'
+  shell: "ssh-keygen -f {{ ssh_known_hosts_file }} -R {{ item }}"
+  with_items: 
+    - "{{ ssh_known_hosts }}"
+  ignore_errors: yes
+  tags:
+      ssh  
+
+- name: Removing the public key for IP address in the '{{ ssh_known_hosts_file }}'
+  shell: "ssh-keygen -f {{ ssh_known_hosts_file }} -R {{ item.stdout }}"
+  with_items: 
+    - "{{ ssh_known_ip_results.results }}"
+  ignore_errors: yes
+  tags:
+      ssh  
+
+- name: Adding the ssh keys in the '{{ ssh_known_hosts_file }}'
+  shell: "{{ ssh_known_hosts_command }} {{ item }} >> {{ ssh_known_hosts_file  }}" 
+  with_items: "{{ ssh_known_hosts }}"
+
+- name: For each host, ssh-copy-id my ssh public keys to the host
+  shell: "sshpass -p {{ ansible_ssh_pass }} ssh-copy-id {{ item }}"
+  with_items: "{{ ssh_known_hosts }}"
+  when: not (( ansible_ssh_pass is undefined ) or ( ansible_ssh_pass is none ) or ( ansible_ssh_pass | trim == ''))
+  tags:
+    - sshcopy

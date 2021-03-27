@@ -1,0 +1,54 @@
+---
+# - name: setup-debian | updating cache
+#   apt:
+#      update_cache: true
+
+- name: setup-debian | Installing packages
+  apt: 
+    name: 
+      - gpg 
+      - ufw
+      - rsync
+    state: present  
+    update_cache: true
+  when: ansible_distribution_version.split('.')[0] is version('18','>=')
+  
+
+- name: setup-debian | adding apt postgres key 
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc 
+    state: present
+
+- name: setup-debian | Adding postgres repo
+  become: true
+  apt_repository:
+    repo: 'deb http://apt.postgresql.org/pub/repos/apt/ "{{ ansible_distribution_release }}"-pgdg main'
+    filename: postgresql
+    state: present
+
+- name: installing postgres
+  apt:
+    name: 
+      - postgresql-{{ postgres_version }}
+      - postgresql-server-dev-{{ postgres_version }}
+    state: present
+
+- name: 
+  apt:
+    name:
+      - "{{ postgresql_python_library }}"
+  when: installpsycopg2
+
+
+- name: "installing postgres-contrib pg_version <= 10"
+  apt:
+    name: postgresql-contrib-{{ postgres_version }}
+    state: present
+  when: postgresql_version is version('11','<') 
+
+- name: open firewall
+  ufw:
+    rule: allow
+    port: '5432'
+
+

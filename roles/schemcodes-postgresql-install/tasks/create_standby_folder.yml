@@ -1,0 +1,34 @@
+---
+- name: create folder in script
+  file: 
+    path: "/var/lib/postgresql/tools_{{ postgres_version }}/script/standby_setup"
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: moving the create_stand_by files
+  copy: 
+    src: "{{ role_path }}/files/create_standby_script/"
+    dest: "/var/lib/postgresql/tools_{{ postgres_version }}/script/standby_setup/"
+    owner: postgres
+    group: postgres
+
+- name: copy over the templates
+  template: 
+    src: "templates/{{ item }}.j2"
+    dest: "/var/lib/postgresql/tools_{{ postgres_version }}/script/standby_setup/{{ item }}"
+    owner: postgres
+    group: postgres
+  with_items:
+    - "{{ template_list }}"
+    
+- name: listing all the files
+  shell: " ls /var/lib/postgresql/tools_{{ postgres_version }}/script/standby_setup/*.sh"
+  register: filesPermission
+
+- name: changing permission
+  file:
+    path: "{{ item }}"
+    mode: 0755
+  with_items: 
+    - "{{ filesPermission.stdout_lines }}"
