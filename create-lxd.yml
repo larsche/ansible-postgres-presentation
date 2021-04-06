@@ -5,3 +5,23 @@
           - group_hosts: "{{ groups['dbserver'] }}"
   roles:
           - schemcodes-lxd
+
+- hosts: localhost
+  connection: lxd
+  vars:
+          - group_hosts: "{{ groups['appserver'] }}"
+  roles:
+          - schemcodes-lxd
+
+        #    1  apt install acl 
+#     2  setfacl -m g:postgres:rwx /tmp
+
+
+# - name: Sets default ACL for joe on /etc/foo.d/
+#   ansible.posix.acl:
+#     path: /tmp
+#     entity: postgres
+#     etype: group
+#     permissions: rwx
+#     default: yes
+#     state: present

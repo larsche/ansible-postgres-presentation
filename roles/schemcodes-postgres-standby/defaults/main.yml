@@ -1,1 +1,9 @@
 ---
+postgresql_global_replication_options:
+  - option: primary_conninfo
+    value: "host={{ primary }} port=5432 user={{ replicant_user }}
+     password={{ replicant_pwd }}"
+  - option: promote_trigger_file 
+    value: '{{ postgres_home_dir }}/{{ postgres_version }}/main/failover'
+  - option: restore_command
+    value: 'cp /mnt/server/archivedir/%f %p'

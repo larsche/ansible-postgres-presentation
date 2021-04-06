@@ -8,12 +8,12 @@
               - "!settings" 
       register: pg_ping
   rescue:
-    - name: Installing psycopg2 since it does not exists
+    - name: Installing psycopg2 if it does not exists
       apt:
         name: 
           - python3-psycopg2
         state: present
-
+ 
     - name: checking if postgres is available
       become_user: postgres 
       postgresql_info:

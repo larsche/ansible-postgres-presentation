@@ -21,7 +21,7 @@ function log_info(){
         else 
           _error="\033[37;41;5;1mERROR\033[0m"
         fi
-    fi
+    fi>
     
     _msg_timestamp=$(date +'%Y-%m-%d %H:%M:%S')
     if $logToFile; then      

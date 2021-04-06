@@ -1,9 +1,8 @@
 ---
 - include_role:
-    name: schemcodes-postgres_info ## this will get all the basic info, like recovry mode.
+    name: schemcodes-postgres-basic-info
     apply:
       become: yes
-      check_mode: no
 
 - name: creating user in primary
   become: true

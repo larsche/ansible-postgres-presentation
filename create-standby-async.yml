@@ -1,0 +1,8 @@
+---
+- hosts: dbserver
+  become: true
+  gather_facts: true
+  vars:
+    - async_enabled: true
+  roles:
+    - schemcodes-postgres-standby

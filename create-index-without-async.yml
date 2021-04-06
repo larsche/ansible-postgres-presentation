@@ -1,0 +1,11 @@
+---
+- hosts: dbserver
+  become: true
+  gather_facts: true
+  vars:
+    async_enabled: false
+  roles:
+    - schemcodes-create-index
+  
+
+  

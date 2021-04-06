@@ -1,6 +1,6 @@
 ---
 - hosts: dbserver 
-  become: true
+  become: yes
   gather_facts: true
   roles:
     - schemcodes-create-user

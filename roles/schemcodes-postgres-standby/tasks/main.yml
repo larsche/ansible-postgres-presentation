@@ -29,22 +29,12 @@
 
 - name: Standby | create slave async enabled
   become_user: postgres
-  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
+  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup 
+        \ -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
   async: 6000
   poll: 0
   register: create_standby
   when: async_enabled
-
-- name: Standby | check async status async enabled
-  become_user: postgres
-  async_status:
-    jid: "{{ create_standby.ansible_job_id }}"
-  register: job_result
-  until: job_result.finished
-  retries: 100
-  delay: 10
-  when: async_enabled
-
 
 - name: Standby | handling the settings
   become_user: postgres
@@ -58,6 +48,15 @@
   with_items: "{{ postgresql_global_replication_options }}"
   register: changes_to_conf
 
+- name: Standby | Check status
+  become_user: postgres
+  async_status:
+    jid: "{{ create_standby.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 100
+  delay: 10
+  when: async_enabled
 
 - name: Standby | creating the signal file
   become_user: postgres
