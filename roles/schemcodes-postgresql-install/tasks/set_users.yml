@@ -1,11 +1,4 @@
----
-
-
-# - name: set user | including the postgres users varaibles
-#   include_vars:
-#     file: set_user.yml
-
-    
+---  
 - name: set user | Ensure PostgreSQL users are present.
   postgresql_user:
     name: "{{ item.name }}"
@@ -17,7 +10,7 @@
     port: "{{ item.port | default(omit) }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ postgresql_users }}"
-  # no_log: true
+  no_log: true
   ignore_errors: true
   become: true
   become_user: "{{ postgresql_user }}"

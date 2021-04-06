@@ -8,10 +8,6 @@
   with_items:
     - "{{ postgresql_config_path }}"
     - "{{ postgresql_config_path }}/conf.d"
-    - "/var/lib/postgresql/tools_{{ postgres_version }}"
-    - "/var/lib/postgresql/tools_{{ postgres_version }}/log"
-    - "/var/lib/postgresql/tools_{{ postgres_version }}/sql"
-    - "/var/lib/postgresql/tools_{{ postgres_version }}/script"
     - "/var/lib/postgresql/{{ postgres_version }}/archive"
     
     #- {{  }}
@@ -50,7 +46,15 @@
     mode: 02775
   with_items: "{{ postgresql_unix_socket_directories }}"
 
-- name: flush hanlers
+- name: Configuration |g iving /tmp access to postgres
+  acl:
+    path: /tmp
+    entity: postgres
+    etype: group
+    permissions: rwx
+    state: present
+
+- name: Configuration | flush hanlers
   meta: flush_handlers
 
 

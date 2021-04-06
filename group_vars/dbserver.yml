@@ -3,11 +3,18 @@ postgres_home_dir: "/var/lib/postgresql"
 postgresql_user: postgres
 postgresql_group: postgres
 replicant_user: replicant
+app_user: bench_user_app
+app_db_name: pgbench_db
 
 postgresql_users:
   - name: "{{ replicant_user }}"
     password: "{{ replicant_pwd }}" 
     role_attr_flags: replication
+    state: present
+
+  - name: "{{ app_user }}"
+    password: "{{ bench_user_admin }}" 
+    role_attr_flags: CREATEDB,LOGIN
     state: present
 
 

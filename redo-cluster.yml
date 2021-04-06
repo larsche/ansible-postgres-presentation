@@ -2,7 +2,7 @@
 - hosts: localhost #elocalhost
   connection: local
   vars: 
-    ssh_known_hosts:  "{{ groups['dbservers'] }}"
+    ssh_known_hosts:  "{{ groups['dbserver'] }}"
   tasks:
           - name: destroying lxc containers
             lxd_container:

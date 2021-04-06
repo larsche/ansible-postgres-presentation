@@ -20,23 +20,14 @@
     state: "{{ postgresql_service_state }}"
     enabled: "{{ postgresql_service_enabled }}"
 
-
 - import_tasks: set_users.yml
   tags: user
+
+- import_tasks: initilizing_db.yml
+  tags: init
 
 
 - name: removing the "{{ postgresql_python_library }}"
   apt:
     name: "{{ postgresql_python_library }}"
     state: absent
-
-
-# - import_tasks: create_standby_folder.yml
-#   tags: standby
-
-  #- import_tasks: databases.yml
-
-## create the slave! Not forced
-# - import_tasks: slave.yml
-#   when: is_slave
-  #  tags: [ 'never', 'slave' ]

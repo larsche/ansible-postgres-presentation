@@ -1,0 +1,25 @@
+---
+- name: creating db
+  become_user: postgres 
+  postgresql_db:
+    name: "{{app_db_name }}"
+    owner: "{{ app_user }}"
+
+- name: initializing db
+  become_user: postgres 
+  command: "pgbench -i -d {{app_db_name}}"
+
+- name: adding the command to run pgbench remotely
+  copy:
+    content: "pgbench -T120 -d {{app_db_name}} -c4"
+    dest: "~postgres/bench_command.sh"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0755
+
+- name: async
+  become_user: postgres
+  command: "bash  ~postgres/bench_command.sh"
+  async: 400
+  poll: 5
+  when: '"1-" in inventory_hostname'
