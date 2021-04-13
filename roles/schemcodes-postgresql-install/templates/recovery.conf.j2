@@ -5,17 +5,17 @@
 standby_mode=on
  
 ##CONN INFO
-#remote slaves with ssl requirement (compression)
+#remote standbys with ssl requirement (compression)
 #primary_conninfo='host=<ip-address_of_primary> user=replicant password=<password> sslmode=require'
  
-#local slaves without ssl:
+#local standbys without ssl:
 primary_conninfo = 'host={{ primary }} port=5432 user=replication password={{ replicant_pwd }}  sslmode=allow'
  
 ##RESTORE COMMAND
-#remote slaves with band width limiting:
+#remote standbys with band width limiting:
 #restore_command='/usr/bin/rsync -z --bwlimit=625 -e "ssh -l database -p 39027 -i /var/keys/id_database_rsa" -a database@backupX<check number in postgres.conf>.<site>.kambi.com:archive/<primaryserver_name>.<site>.kambi.com-main/%f %p||exit 1'
  
-#local slaves without band width limiting:
+#local standbys without band width limiting:
 restore_command='/usr/bin/rsync -z -e "ssh -l {{ wal_user }} -i /var/keys/id_{{ wal_user}} _rsa" -a database@loc-backup:archive/{{ primary }}-main/%f %p||exit 1'
 
  

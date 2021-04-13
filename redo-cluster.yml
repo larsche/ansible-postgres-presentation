@@ -15,3 +15,6 @@
 - import_playbook: add-ssh-key.yml
 
 - import_playbook: create-cluster.yml
+
+- import_playbook: create-standby-async.yml
+  tags: standby

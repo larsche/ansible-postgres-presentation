@@ -4,23 +4,36 @@
     apply:
       become: yes
 
+# - name: creating index with a timeout of 1000 sec and will poll every 10s
+#   become_user: postgres
+#   postgresql_idx:
+#     db: postgres
+#     table: pgbench_accounts
+#     columns: bid
+#     name: idx_bid_pgbench_accounts
+#   async: 1000
+#   poll: 10
+#   when: Isrecovery == 'f' and async_enabled 
+
+
+# - name: creating index without async
+#   become_user: postgres
+#   postgresql_idx:
+#     db: postgres
+#     table: pgbench_accounts
+#     columns: bid
+#     name: idx_bid_pgbench_accounts
+#   when: Isrecovery == 'f' and not async_enabled 
+
+- name: creating index without async
+  become_user: postgres
+  shell: "psql -qAt -c 'CREATE INDEX CONCURRENTLY if not exists idx_bid_pgbench_accounts ON pgbench_accounts USING BTREE (bid)' && sleep {{ sleep_time }}"
+  when: Isrecovery == 'f' and not async_enabled 
+
 - name: creating index with a timeout of 1000 sec and will poll every 10s
   become_user: postgres
-  postgresql_idx:
-    db: postgres
-    table: pgbench_accounts
-    columns: bid
-    name: idx_bid_pgbench_accounts
-  async: 1000
-  poll: 10
+  shell: "psql -qAt -c 'CREATE INDEX CONCURRENTLY if not exists idx_bid_pgbench_accounts ON pgbench_accounts USING BTREE (bid)' && sleep {{ sleep_time }}"
+  async: "{{ async_timeout }}"
+  poll: "{{ poll_setting }}"
   when: Isrecovery == 'f' and async_enabled 
 
-
-- name: creating index with a timeout of 1000 sec and will poll every 10s
-  become_user: postgres
-  postgresql_idx:
-    db: postgres
-    table: pgbench_accounts
-    columns: bid
-    name: idx_bid_pgbench_accounts
-  when: Isrecovery == 'f' and not async_enabled 

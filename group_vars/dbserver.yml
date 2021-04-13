@@ -3,8 +3,8 @@ postgres_home_dir: "/var/lib/postgresql"
 postgresql_user: postgres
 postgresql_group: postgres
 replicant_user: replicant
-app_user: bench_user_app
-app_db_name: pgbench_db
+app_user: "{{postgresql_user}}"
+app_db_name: postgres
 
 postgresql_users:
   - name: "{{ replicant_user }}"

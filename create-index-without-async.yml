@@ -4,6 +4,7 @@
   gather_facts: true
   vars:
     async_enabled: false
+    sleep_time: 30
   roles:
     - schemcodes-create-index
   

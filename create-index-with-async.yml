@@ -4,6 +4,9 @@
   gather_facts: true
   vars:
     async_enabled: true
+    async_timeout: 100
+    sleep_time: 30
+    poll_setting: 10
   roles:
     - schemcodes-create-index
   

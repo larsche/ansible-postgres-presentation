@@ -10,6 +10,7 @@
       - ufw
       - rsync
       - acl
+      - net-tools
     state: present  
     update_cache: true
   when: ansible_distribution_version.split('.')[0] is version('18','>=')

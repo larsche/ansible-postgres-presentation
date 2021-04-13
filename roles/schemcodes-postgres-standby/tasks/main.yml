@@ -1,8 +1,5 @@
 ---
-#
 - include_tasks: variables.yml
-
-#- include_tasks: setup_standby
 
 - fail:
     msg: This is a potential primary
@@ -20,19 +17,20 @@
     
 
 
-- name: Standby | create slave non async disabled
+- name: Standby | create standby non async disabled
   become_user: postgres
-  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
+  shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup 
+        \ -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
   register: create_standby
   when: not async_enabled
 
 
-- name: Standby | create slave async enabled
+- name: Standby | create standby async enabled
   become_user: postgres
   shell: "export PGPASSWORD={{ replicant_pwd }} && /usr/lib/postgresql/{{ postgres_version }}/bin/pg_basebackup 
         \ -h {{ primary }} -U {{ replicant_user }} -P -X s -D {{ postgresql_data_dir }} 2>&1 && sleep {{ sleep_time }} "
-  async: 6000
-  poll: 0
+  async: "{{ async_timeout }}"
+  poll: "{{ poll_setting }}"
   register: create_standby
   when: async_enabled
 
@@ -67,7 +65,7 @@
     group: "{{ postgresql_group }}"
 
 
-- name: Standby | Stop any postgres running
+- name: Standby | Start postgres 
   command: "pg_ctlcluster {{postgres_version}} {{postgresql_ctlcluster}} start"
   ignore_errors: yes
 

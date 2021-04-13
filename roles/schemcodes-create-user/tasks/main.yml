@@ -1,8 +1,15 @@
 ---
 - include_role:
+    name: schemcodes-postgres-info-no-rescue
+    apply:
+      become: yes
+  when: not use_rescue
+
+- include_role:
     name: schemcodes-postgres-basic-info
     apply:
       become: yes
+  when: use_rescue
 
 - name: creating user in primary
   become: true

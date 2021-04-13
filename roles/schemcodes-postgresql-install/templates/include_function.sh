@@ -31,7 +31,7 @@ function exit_function(){
 }
 
 function create_recovery_conf(){
-    # this will create a recovery file taht will be used to start off a slave script
+    # this will create a recovery file taht will be used to start off a standby script
     original_recovery_file=$1
     primary_hostname=$2
 

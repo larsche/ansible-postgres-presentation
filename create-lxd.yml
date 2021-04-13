@@ -6,13 +6,6 @@
   roles:
           - schemcodes-lxd
 
-- hosts: localhost
-  connection: lxd
-  vars:
-          - group_hosts: "{{ groups['appserver'] }}"
-  roles:
-          - schemcodes-lxd
-
         #    1  apt install acl 
 #     2  setfacl -m g:postgres:rwx /tmp
 

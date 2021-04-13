@@ -3,20 +3,20 @@
 standby_mode=on
 
 ##CONN INFO
-#remote slaves with ssl requirement (compression)
+#remote standbys with ssl requirement (compression)
 #primary_conninfo='host=<ip-address_of_primary> user=replicant password=<password> sslmode=require'
 
-#local slaves without ssl:
+#local standbys without ssl:
 primary_conninfo = 'host=${PRIMARY_HOST} user={{ replicant_user }} password={{ replicant_pwd }} sslmode=allow'
 
 ##RESTORE COMMAND
-#remote slaves with band width limiting:
+#remote standbys with band width limiting:
 #restore_command='/usr/bin/rsync -z --bwlimit=625 -e "ssh -l database -p 39027 -i /var/keys/id_database_rsa" -a database@backupX<check number in postgres.conf>.<site>.kambi.com:archive/<primaryserver_name>.<site>.kambi.com-main/%f %p||exit 1'
 
 #restore command for the WAL compression
 #restore_command='(/usr/bin/rsync -e "ssh -l database -p 39027 -i /var/keys/id_database_rsa" -a database@{{ recovery_location }}.kambi.com:archive/${PRIMARY_HOST}-main/%f.xz %p.xz && xz --decompress %p.xz)||exit 1'
 
-#local slaves without band width limiting:
+#local standbys without band width limiting:
 {% if wal_compression == -1 %}
 #Restore command without compression
 restore_command='{{ recovery_uncompressed }}'

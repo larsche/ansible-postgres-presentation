@@ -2,5 +2,7 @@
 - hosts: dbserver 
   become: true
   gather_facts: true
+  vars: 
+    use_rescue: false
   roles:
     - schemcodes-create-user
