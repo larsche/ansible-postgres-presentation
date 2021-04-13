@@ -35,7 +35,6 @@
   when: async_enabled
 
 - name: Standby | handling the settings
-  become_user: postgres
   lineinfile:
     dest: "{{ postgresql_config_path }}/postgresql.conf"
     regexp: "^#?{{ item.option }}.+$"

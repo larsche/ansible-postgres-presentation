@@ -5,7 +5,7 @@
   strategy: free
   vars:
     - async_enabled: true
-    - async_timeout: 400
+    - async_timeout: 100
     - poll_setting: 0
   roles:
     - schemcodes-postgres-standby
