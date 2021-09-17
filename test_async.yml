@@ -18,5 +18,5 @@
       jid: "{{ sleep_command.ansible_job_id }}"
     register: job_result
     until: job_result.finished
-    retries: 7
+    retries: 10
     delay: 5

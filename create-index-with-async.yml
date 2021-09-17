@@ -4,7 +4,7 @@
   gather_facts: true
   vars:
     async_enabled: true
-    async_timeout: 100
+    async_timeout: 10
     sleep_time: 30
     poll_setting: 10
   roles:
